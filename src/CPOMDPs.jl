@@ -6,7 +6,6 @@ import POMDPLinter
 import POMDPs: simulate, gen, @gen
 using POMDPTools
 import POMDPTools: UnderlyingMDP, stepthrough # for ConstrainedRollout
-using Infiltrator
 
 export 
     
@@ -19,8 +18,6 @@ export
     n_costs,
     costs_limit,
     costs_value,
-    min_reward,
-    max_reward,
 
     # Generative functions
     gen, 

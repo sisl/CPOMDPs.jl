@@ -46,19 +46,3 @@ function costs_value end
 Return the number of constraints
 """
 function n_costs end
-
-"""
-    min_reward(m::Union{CPOMDP,CMDP})
-
-Return the minimum single-step reward
-
-"""
-function min_reward end
-
-"""
-    max_reward(m::Union{CPOMDP,CMDP})
-
-Return the maximum single-step reward
-
-"""
-function max_reward end

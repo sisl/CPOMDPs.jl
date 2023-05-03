@@ -1,13 +1,25 @@
 name = "CPOMDPs"
 uuid = "b333230a-c79e-4dbf-bcff-ea8d21aa5ebd"
 authors = ["Arec Jamgochian <jamgochian95@gmail.com>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
-Infiltrator = "5903a43b-9cc3-4c30-8d17-598619ec4e9b"
 POMDPLinter = "f3bd98c0-eb40-45e2-9eb1-f2763262d755"
 POMDPTools = "7588e00f-9cae-40de-98dc-e0c70c48cdd7"
 POMDPs = "a93abf59-7444-517b-a68a-c42f96afdd7d"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+
+[compat]
+Graphs = "1"
+POMDPLinter = "0.1"
+POMDPs = "0.9"
+julia = "1"
+
+[extras]
+QuickPOMDPs = "8af83fb2-a731-493c-9049-9e19dbce6165"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test", "QuickPOMDPs"]
