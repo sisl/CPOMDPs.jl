@@ -41,4 +41,14 @@ include("CPOMDPTools/simulators.jl")
 include("CPOMDPTools/undercmdp.jl")
 include("CPOMDPTools/gbcmdp.jl")
 include("CPOMDPTools/constrain_wrapper.jl")
+
+export
+    LowLevelPolicy,
+    terminate,
+    OptionsPolicy,
+    rng,
+    low_level,
+    update!,
+    new_option
+include("CPOMDPTools/options.jl")
 end # module

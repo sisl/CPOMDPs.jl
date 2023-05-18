@@ -41,7 +41,7 @@ Returns the cost value from policy `p` given the state (or belief), or state-act
 function costs_value end
     
 """
-    ncosts(m::Union{CPOMDP,CMDP})
+    n_costs(m::Union{CPOMDP,CMDP})
 
 Return the number of constraints
 """
