@@ -49,6 +49,7 @@ export
     rng,
     low_level,
     update!,
-    new_option
+    new_option,
+    RandomOptionsPolicy
 include("CPOMDPTools/options.jl")
 end # module

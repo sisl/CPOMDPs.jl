@@ -30,51 +30,51 @@ function rng end
 rng(p::OptionsPolicy) = Random.GLOBAL_RNG
 
 """
-    update!(p::OptionPolicy, x, option::LowLevelPolicy, new_option::Bool)
+    update!(p::OptionsPolicy, x, option::LowLevelPolicy, new_option::Bool)
 Update the option policy `p` given the start state/belief `x`, the running option, and whether the option is new. 
 Optionally return the high-level info.
 """
 function update! end
 
 """
-    low_level(p::OptionPolicy)
-Must return the `LowLevelPolicy` that the high-level `OptionPolicy` is currently executing or `nothing` in the first state.
+    low_level(p::OptionsPolicy)
+Must return the `LowLevelPolicy` that the high-level `OptionsPolicy` is currently executing or `nothing` in the first state.
 """
 function low_level end
 
 """
-    new_option(p::OptionPolicy, x)
+    select_option(p::OptionsPolicy, x)
 Select a new option from state/belief `x`. Returns a `LowLevelPolicy`.
 """
-function new_option end 
+function select_option end 
 
 """
-    POMDPs.action(p::OptionPolicy, x)
-    POMDPTools.action_info(p::OptionPolicy, x)
+    POMDPs.action(p::OptionsPolicy, x)
+    POMDPTools.action_info(p::OptionsPolicy, x)
 Returns the low-level action (and additionally a NamedTuple of the low-level and high-level info if calling `action_info`). This is done by:
 1. Determining the current option thorugh `low_level(p)`.
 2. Using `rng(p)` to sample whether to terminate that option from `terminate(option, x)`.
-3. If so, choosing a new option through `new_option(p, x)`.
+3. If so, choosing a new option through `select_option(p, x)`.
 4. Generating the low-level action through `action(option, x)`.
-5. Updating the internal state of the OptionPolicy through `update!(p, x, option, new_option)`.
+5. Updating the internal state of the OptionsPolicy through `update!(p, x, option, new_option)`.
 """
-function POMDPTools.action_info(p::OptionPolicy, x)
+function POMDPTools.action_info(p::OptionsPolicy, x)
     new_option = false
     option = low_level(p)
     if option===nothing || rand(rng(p), terminate(option, x))
         new_option = true
-        option = new_option(p, x)
+        option = select_option(p, x)
     end
     a, ll_info = POMDPTools.action_info(option, x)
     hl_info = update!(p, x, option, new_option)
     return a, (;low=ll_info, high=hl_info)
 end
-function POMDPs.action(p::OptionPolicy, x)
+function POMDPs.action(p::OptionsPolicy, x)
     new_option = false
     option = low_level(p)
     if option===nothing || rand(rng(p), terminate(option, x))
         new_option = true
-        option = new_option(p, x)
+        option = select_option(p, x)
     end
     update!(p, x, option, new_option)
     return action(option, x)
@@ -83,12 +83,12 @@ end
 # Random Options Policy - given a set of options, choose the next one randomly after termination
 
 mutable struct RandomOptionsPolicy <: OptionsPolicy
-    options::Vector{LowLevelPolicy}
+    options::Vector{<:LowLevelPolicy}
     running::Union{Nothing,LowLevelPolicy}
     rng::Random.AbstractRNG
     step_counter::Int
 end
-RandomOptionsPolicy(os::Vector{LowLevelPolicy};rng=Random.GLOBAL_RNG) = RandomOptionsPolicy(os, nothing, rng, 0)
+RandomOptionsPolicy(os::Vector{<:LowLevelPolicy};rng=Random.GLOBAL_RNG) = RandomOptionsPolicy(os, nothing, rng, 0)
 
 rng(p::RandomOptionsPolicy) = p.rng
 function update!(p::RandomOptionsPolicy, x, option::LowLevelPolicy, new_option::Bool) 
@@ -97,4 +97,4 @@ function update!(p::RandomOptionsPolicy, x, option::LowLevelPolicy, new_option::
     return (;new_option = new_option, step_counter=p.step_counter)
 end
 low_level(p::RandomOptionsPolicy) = p.running
-new_option(p::RandomOptionsPolicy, x) = rand(p.rng, p.options)
+select_option(p::RandomOptionsPolicy, x) = rand(p.rng, p.options)
