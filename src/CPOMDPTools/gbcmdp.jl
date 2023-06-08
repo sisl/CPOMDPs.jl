@@ -27,9 +27,6 @@ function POMDPs.reward(bmdp::GenerativeBeliefCMDP, b::Union{WeightedParticleBeli
         r += w * reward(bmdp.cpomdp, s, a)
         w_sum += w
     end
-    if !(w_sum ≈ 1.)
-        @warn("particle filter belief weights not summing to 1.")
-    end
     return r / w_sum
 end
 function costs(bmdp::GenerativeBeliefCMDP, b::Union{WeightedParticleBelief, ParticleCollection}, a)
@@ -38,9 +35,6 @@ function costs(bmdp::GenerativeBeliefCMDP, b::Union{WeightedParticleBelief, Part
     for (s,w) in weighted_particles(b)
         c += w * costs(bmdp.cpomdp, s, a)
         w_sum += w
-    end
-    if !(w_sum ≈ 1.)
-        @warn("particle filter belief weights not summing to 1.")
     end
     return c / w_sum
 end
