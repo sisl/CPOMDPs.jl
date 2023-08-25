@@ -5,12 +5,13 @@ Create a generative model of the belief CMDP corresponding to CPOMDP `pomdp` wit
 struct GenerativeBeliefCMDP{P<:CPOMDP, U<:Updater, B, A} <: CMDP{B, A}
     cpomdp::P
     updater::U
+    exact_rewards::Bool
 end
 
-function GenerativeBeliefCMDP(cpomdp::P, up::U) where {P<:CPOMDP, U<:Updater}
+function GenerativeBeliefCMDP(cpomdp::P, up::U; exact_rewards::Bool=false) where {P<:CPOMDP, U<:Updater}
     # XXX hack to determine belief type
     b0 = initialize_belief(up, initialstate(cpomdp))
-    GenerativeBeliefCMDP{P, U, typeof(b0), actiontype(cpomdp)}(cpomdp, up)
+    GenerativeBeliefCMDP{P, U, typeof(b0), actiontype(cpomdp)}(cpomdp, up, exact_rewards)
 end
 
 POMDPs.actions(bmdp::GenerativeBeliefCMDP{P,U,B,A}, b::B) where {P,U,B,A} = actions(bmdp.cpomdp, b)
@@ -29,6 +30,18 @@ function POMDPs.reward(bmdp::GenerativeBeliefCMDP, b::Union{WeightedParticleBeli
     end
     return r / w_sum
 end
+function POMDPs.reward(bmdp::GenerativeBeliefCMDP, b::Union{WeightedParticleBelief, ParticleCollection}, 
+    a, bp::Union{WeightedParticleBelief, ParticleCollection}, o)
+    r = 0.
+    w_sum = 0.
+    for (s,w) in weighted_particles(b)
+        for (sp,wp) in weighted_particles(bp)
+            r += w * wp * reward(bmdp.cpomdp, s, a, sp, o)
+            w_sum += w * wp
+        end
+    end
+    return r / w_sum
+end
 function costs(bmdp::GenerativeBeliefCMDP, b::Union{WeightedParticleBelief, ParticleCollection}, a)
     c = zeros(Float64, n_costs(bmdp.cpomdp))
     w_sum = 0.
@@ -38,30 +51,41 @@ function costs(bmdp::GenerativeBeliefCMDP, b::Union{WeightedParticleBelief, Part
     end
     return c / w_sum
 end
-
+function costs(bmdp::GenerativeBeliefCMDP, b::Union{WeightedParticleBelief, ParticleCollection}, 
+    a, bp::Union{WeightedParticleBelief, ParticleCollection}, o)
+    c = zeros(Float64, n_costs(bmdp.cpomdp))
+    w_sum = 0.
+    for (s,w) in weighted_particles(b)
+        for (sp,wp) in weighted_particles(bp)
+            c += w * wp * costs(bmdp.cpomdp, s, a, sp, o)
+            w_sum += w * wp
+        end
+    end
+    return c / w_sum
+end
 function POMDPs.gen(bmdp::GenerativeBeliefCMDP, b, a, rng::AbstractRNG)
     s = rand(rng, b)
     if isterminal(bmdp.cpomdp, s)
-        bp = gbmdp_handle_terminal(bmdp.cpomdp, bmdp.updater, b, s, a, rng::AbstractRNG)::typeof(b)
-        return (sp=bp, r=0.0, c=zeros(Float64, n_costs(bmdp.cpomdp)))
+        return gbmdp_handle_terminal(bmdp, b, s, a, rng::AbstractRNG)
     end
     sp, o, r, c = @gen(:sp, :o, :r, :c)(bmdp.cpomdp, s, a, rng) # maybe this should have been generate_or?
-    # why do this instead of generate r(b,a) and c(b,a)?? speed?? e.g.
-    # r = reward(bmdp, b, a)
-    # c = costs(bmdp, b, a)
     bp = update(bmdp.updater, b, a, o)
+    if bmdp.exact_rewards
+        r = reward(bmdp, b, a, bp, o)
+        c = costs(bmdp, b, a, bp, o)
+    end
     return (sp=bp, r=r, c=c)
 end
 
 # override this if you want to handle it in a special way
-function gbmdp_handle_terminal(pomdp::CPOMDP, updater::Updater, b, s, a, rng)
+function gbmdp_handle_terminal(bmdp::GenerativeBeliefCMDP, b, s, a, rng)
     @warn("""
          Sampled a terminal state for a GenerativeBeliefCMDP transition - not sure how to proceed, but will try.
          See $(@__FILE__) and implement a new method of CPOMDPs.gbmdp_handle_terminal if you want special behavior in this case.
          """, maxlog=1)
-    sp, o, r = @gen(:sp, :o, :r)(pomdp, s, a, rng)
-    bp = update(updater, b, a, o)
-    return bp
+    o =  @gen(:o)(bmdp.cpomdp, s, a, rng)
+    bp = update(bmdp.updater, b, a, o)
+    return (sp=bp, r=0.0, c=zeros(Float64, n_costs(bmdp.cpomdp)))
 end
 
 function POMDPs.initialstate(bmdp::GenerativeBeliefCMDP)
