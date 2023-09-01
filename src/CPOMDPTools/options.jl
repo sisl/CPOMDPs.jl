@@ -5,6 +5,12 @@ Base type for a low-level policy (a map from every possible belief, or more abst
 abstract type LowLevelPolicy <: POMDPs.Policy end
 
 """
+    reset!(p::LowLevelPolicy)
+Reset the low-level policy `p` to its initial state. This is called when the high-level policy terminates an option.
+"""
+reset!(p::LowLevelPolicy) = nothing
+
+"""
     terminate(p::LowLevelPolicy, x)
 Returns a distribution over whether to terminate option `p` in state/belief `x`.
 """
@@ -71,6 +77,7 @@ function POMDPTools.action_info(p::OptionsPolicy, x)
     if option===nothing || rand(rng(p), terminate(option, x))
         new_option = true
         option, opt_info = select_option(p, x)
+        reset!(option)
     end
     a, ll_info = POMDPTools.action_info(option, x)
     hl_info = update!(p, x, option, a, new_option)
@@ -82,6 +89,7 @@ function POMDPs.action(p::OptionsPolicy, x)
     if option===nothing || rand(rng(p), terminate(option, x))
         new_option = true
         option = first(select_option(p, x))
+        reset!(option)
     end
     update!(p, x, option, a, new_option)
     return first(POMDPTools.action_info(option, x))

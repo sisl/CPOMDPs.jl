@@ -50,6 +50,7 @@ export
     rng,
     low_level,
     update!,
+    reset!,
     new_option,
     RandomOptionsPolicy
 include("CPOMDPTools/options.jl")
