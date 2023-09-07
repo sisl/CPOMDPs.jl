@@ -21,7 +21,7 @@ POMDPs.discount(bmdp::GenerativeBeliefCMDP) = discount(bmdp.cpomdp)
 n_costs(bmdp::GenerativeBeliefCMDP) = n_costs(bmdp.cpomdp)
 costs_limit(bmdp::GenerativeBeliefCMDP) = costs_limit(bmdp.cpomdp)
 
-function POMDPs.reward(bmdp::GenerativeBeliefCMDP, b::Union{WeightedParticleBelief, ParticleCollection}, a)
+function POMDPs.reward(bmdp::GenerativeBeliefCMDP, b, a)
     r = 0.
     w_sum = 0.
     for (s,w) in weighted_particles(b)
@@ -30,8 +30,7 @@ function POMDPs.reward(bmdp::GenerativeBeliefCMDP, b::Union{WeightedParticleBeli
     end
     return r / w_sum
 end
-function POMDPs.reward(bmdp::GenerativeBeliefCMDP, b::Union{WeightedParticleBelief, ParticleCollection}, 
-    a, bp::Union{WeightedParticleBelief, ParticleCollection}, o)
+function POMDPs.reward(bmdp::GenerativeBeliefCMDP, b, a, bp, o)
     r = 0.
     w_sum = 0.
     for (s,w) in weighted_particles(b)
