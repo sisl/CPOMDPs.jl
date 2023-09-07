@@ -95,6 +95,18 @@ function POMDPs.action(p::OptionsPolicy, x)
     return first(POMDPTools.action_info(option, x))
 end
 
+# Wrapper for updating option information
+update_option!(p::LowLevelPolicy, b, a, o) = nothing
+struct OptionsUpdateWrapper <: Updater
+    updater::Updater
+    planner::OptionsPolicy
+end
+function POMDPs.update(p::OptionsUpdateWrapper, b, a, o)
+    update_option!(low_level(p.planner), b, a, o)
+    return POMDPs.update(p.updater, b, a, o)
+end
+POMDPs.initialize_belief(p::OptionsUpdateWrapper, dist) = POMDPs.initialize_belief(p.updater, dist)
+
 # Random Options Policy - given a set of options, choose the next one randomly after termination
 
 mutable struct RandomOptionsPolicy <: OptionsPolicy
@@ -113,3 +125,4 @@ function update!(p::RandomOptionsPolicy, x, option::LowLevelPolicy, a, new_optio
 end
 low_level(p::RandomOptionsPolicy) = p.running
 select_option(p::RandomOptionsPolicy, x) = rand(p.rng, p.options), nothing
+

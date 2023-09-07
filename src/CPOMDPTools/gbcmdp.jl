@@ -73,7 +73,7 @@ function POMDPs.gen(bmdp::GenerativeBeliefCMDP, b, a, rng::AbstractRNG)
         r = reward(bmdp, b, a, bp, o)
         c = costs(bmdp, b, a, bp, o)
     end
-    return (sp=bp, r=r, c=c)
+    return (sp=bp, r=r, c=c, o=o)
 end
 
 # override this if you want to handle it in a special way
@@ -84,7 +84,7 @@ function gbmdp_handle_terminal(bmdp::GenerativeBeliefCMDP, b, s, a, rng)
          """, maxlog=1)
     o =  @gen(:o)(bmdp.cpomdp, s, a, rng)
     bp = update(bmdp.updater, b, a, o)
-    return (sp=bp, r=0.0, c=zeros(Float64, n_costs(bmdp.cpomdp)))
+    return (sp=bp, r=0.0, c=zeros(Float64, n_costs(bmdp.cpomdp)),o=o)
 end
 
 function POMDPs.initialstate(bmdp::GenerativeBeliefCMDP)

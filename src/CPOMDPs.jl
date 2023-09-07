@@ -52,6 +52,8 @@ export
     update!,
     reset!,
     new_option,
-    RandomOptionsPolicy
+    RandomOptionsPolicy,
+    OptionsUpdateWrapper,
+    update_option!
 include("CPOMDPTools/options.jl")
 end # module
